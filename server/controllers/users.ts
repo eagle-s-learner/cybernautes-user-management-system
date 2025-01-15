@@ -77,13 +77,16 @@ async function createUser(req: Request, res: Response) {
 }
 
 // update user handler
-async function updateUser(req: Request, res: Response){
-    try{
-        const id: number =  parseInt(req.params.id);
-        const result = await client.query(`SELECT * FROM USERS WHERE id = ($1)`, [id]);
+async function updateUser(req: Request, res: Response) {
+    try {
+        const id: number = parseInt(req.params.id);
+        const result = await client.query(
+            `SELECT * FROM USERS WHERE id = ($1)`,
+            [id]
+        );
 
-        if(result.rows.length === 0){
-            res.status(404).json({message: "User not exist"});
+        if (result.rows.length === 0) {
+            res.status(404).json({ message: "User not exist" });
             return;
         }
 
@@ -95,12 +98,24 @@ async function updateUser(req: Request, res: Response){
         }
 
         // updating name and age
-        if(user.name != result.rows[0].name && user.age != result.rows[0].age){
-            await client.query(`UPDATE users SET name = ($1), age = ($2) WHERE id = ($3)`, [user.name, user.age, id]);
-        }else if(user.name != result.rows[0].name){
-            await client.query(`UPDATE users SET name = ($1) WHERE id = ($2)`, [user.name, id]);
-        }else if(user.age != result.rows[0].age){
-            await client.query(`UPDATE users SET age = ($1) WHERE id = ($2)`, [user.age, id]);
+        if (
+            user.name != result.rows[0].name &&
+            user.age != result.rows[0].age
+        ) {
+            await client.query(
+                `UPDATE users SET name = ($1), age = ($2) WHERE id = ($3)`,
+                [user.name, user.age, id]
+            );
+        } else if (user.name != result.rows[0].name) {
+            await client.query(`UPDATE users SET name = ($1) WHERE id = ($2)`, [
+                user.name,
+                id,
+            ]);
+        } else if (user.age != result.rows[0].age) {
+            await client.query(`UPDATE users SET age = ($1) WHERE id = ($2)`, [
+                user.age,
+                id,
+            ]);
         }
 
         // deleting all the hobbies related to that user
@@ -119,9 +134,32 @@ async function updateUser(req: Request, res: Response){
         }
 
         res.status(200).json({ message: "User updated successfully" });
-    }catch(error){
+    } catch (error) {
         console.error("Error fetching users:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
-export { getUsers, createUser, updateUser };
+
+// delete user handler
+async function deleteUser(req: Request, res: Response) {
+    try {
+        const id: number = parseInt(req.params.id);
+        const result = await client.query(
+            `SELECT * FROM USERS WHERE id = ($1)`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            res.status(404).json({ message: "User not exist" });
+            return;
+        }
+
+        await client.query(`DELETE FROM users WHERE id = ($1)`, [id]);
+
+        res.status(204).json({ message: "User Deleted Successfully" });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+export { getUsers, createUser, updateUser, deleteUser };
